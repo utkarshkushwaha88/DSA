@@ -1,0 +1,220 @@
+                        All methods to delete loop in floyd cycle
+
+Here is a complete, detailed list of all common methods to REMOVE (delete) a loop in a linked list using/after Floyd’s Cycle Detection algorithm.
+
+I’ll explain every practical approach with C++ code.
+
+1. Standard Method (Find loop start using Floyd + Break the loop)
+
+This is the most used and efficient method.
+
+Steps:
+
+Detect cycle using Floyd’s algorithm.
+
+Find the starting node of the loop.
+
+Traverse the loop to find the last node of the cycle.
+
+Set its next to NULL.
+
+Code:
+void removeLoop(Node* head) {
+    if (!head || !head->next) return;
+
+    Node *slow = head, *fast = head;
+
+    // Step 1: Detect cycle
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+
+        if (slow == fast)
+            break;
+    }
+
+    // No loop
+    if (!fast || !fast->next) return;
+
+    // Step 2: Find starting node of loop
+    slow = head;
+    while (slow != fast) {
+        slow = slow->next;
+        fast = fast->next;
+    }
+
+    // slow == fast → start of loop
+    Node* loopStart = slow;
+
+    // Step 3: Find node just before loopStart
+    Node* temp = loopStart;
+    while (temp->next != loopStart) {
+        temp = temp->next;
+    }
+
+    // Step 4: Break loop
+    temp->next = NULL;
+}
+
+
+✅ Time Complexity: O(n)
+✅ Space Complexity: O(1)
+
+2. Method Without Explicitly Finding the Start Node
+
+You can break the loop directly after detection.
+
+Logic:
+
+After meeting point:
+
+Keep fast at meeting point.
+
+Move slow = head.
+
+Move both one step at a time.
+
+Instead of stopping at meeting, track the previous node of fast.
+
+Code:
+void removeLoop(Node* head) {
+    Node *slow = head, *fast = head;
+
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+        if (slow == fast) break;
+    }
+
+    if (!fast || !fast->next) return;
+
+    slow = head;
+    Node* prev = NULL;
+
+    while (slow != fast) {
+        prev = fast;
+        slow = slow->next;
+        fast = fast->next;
+    }
+
+    // Break the loop
+    prev->next = NULL;
+}
+
+
+This avoids the separate traversal to find the last node.
+
+3. Hashing Method (Not Floyd, but commonly asked in interviews)
+
+This method does not use Floyd, but it is a standard alternative.
+
+Logic:
+
+Use unordered_set to store visited nodes.
+
+Code:
+#include <unordered_set>
+
+void removeLoop(Node* head) {
+    unordered_set<Node*> visited;
+    Node* prev = NULL;
+    Node* curr = head;
+
+    while (curr != NULL) {
+        if (visited.find(curr) != visited.end()) {
+            prev->next = NULL;
+            return;
+        }
+        visited.insert(curr);
+        prev = curr;
+        curr = curr->next;
+    }
+}
+
+
+⛔ Uses extra space.
+
+4. Trick Method Using Node Count of Loop
+
+This method uses the length of the loop.
+
+Steps:
+
+Detect cycle.
+
+Count loop length k.
+
+Move one pointer k steps ahead.
+
+Move both pointers until they meet at loop start.
+
+Break loop.
+
+Code:
+int countLoopLength(Node* meet) {
+    int count = 1;
+    Node* temp = meet;
+    while (temp->next != meet) {
+        count++;
+        temp = temp->next;
+    }
+    return count;
+}
+
+void removeLoop(Node* head) {
+    Node *slow = head, *fast = head;
+
+    // Detect cycle
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+        if (slow == fast) break;
+    }
+
+    if (!fast || !fast->next) return;
+
+    // Step 2: Count loop length
+    int k = countLoopLength(slow);
+
+    // Step 3: Move one pointer k steps
+    Node* ptr1 = head;
+    Node* ptr2 = head;
+    for (int i = 0; i < k; i++) {
+        ptr2 = ptr2->next;
+    }
+
+    // Step 4: Find start node
+    while (ptr1 != ptr2) {
+        ptr1 = ptr1->next;
+        ptr2 = ptr2->next;
+    }
+
+    // Step 5: Find last node
+    while (ptr2->next != ptr1) {
+        ptr2 = ptr2->next;
+    }
+
+    // Break loop
+    ptr2->next = NULL;
+}
+
+5. Edge Case Special Method (Self-loop)
+
+If a node points to itself:
+
+10 → ⬆
+     ⬅
+
+Code:
+void removeLoop(Node* head) {
+    if (head && head->next == head) {
+        head->next = NULL;
+    }
+}
+
+6. Summary of All Methods
+Method	Uses Floyd?	Extra Space	Best Use Case
+Find start + break	✅ Yes	❌ No	Most common
+Track previous node	✅ Yes	❌ No	Cleaner version
+Hashing method	❌ No	✅ Yes	Simple logic
+Loop length method	✅ Yes	❌ No	When length info needed
